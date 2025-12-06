@@ -60,12 +60,6 @@ class StateMachine:
                 continue
 
 
-
-
-
-
-
-
     def __str__(self):
         return f"Current state: {self.state}"
 
