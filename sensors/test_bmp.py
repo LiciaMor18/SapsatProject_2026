@@ -14,27 +14,28 @@ temp = 0
 pressure = 0
 
 p_0 = bmp.pressure
-t_0 = bmp.temperature
+T_0 = bmp.temperature
 LAMBDA = -0.0065
 R = 8.315
 g = 9.8067
 M = 0.0290
-EXP = (LAMBDA * R) / (g * M)
+EXP = - (LAMBDA * R) / (g * M)
 
 
 
-h_0 = t_0 / LAMBDA * (1 - 1**EXP)
+h_0 = T_0 / LAMBDA * (1 - 1**EXP)
+print(f'p_0 = {p_0}, T_0 = {T_0}, h_0 = {h_0}, LAMBDA = {LAMBDA}, EXP = {EXP}, ')
 
 while True:
     # Set sensor to weather monitoring mode
     bmp.use_case(bmp280.BMP280_CASE_WEATHER)
     
-    temp = bmp.temperature
-    pressure = bmp.pressure
+    T_t = bmp.temperature
+    p_t = bmp.pressure
+    h_t = T_0 / LAMBDA * (1 - (p_t / p_0)**EXP)
 
     # Print temperature and pressure data
-    print(f"tempC: {temp}")
-    print(f"pressure: {pressure} Pa")
+    print(f'p_t = {p_t}, T_t = {T_t}, h_t = {h_t}')
 
     # Read data every second
     time.sleep_ms(1000)
