@@ -141,3 +141,68 @@ voltage, rate, angular rate, acceleration, magnetic field.
 ParaonoidSalamander, MeticolousFerret, TiburonBorracho) the coiche
 of the name and language shall be explained in detail to the jury
 
+## Sensors 
+
+- [ ] HMC5883L – Magnetometer
+
+    - Measures Earth’s magnetic field and heading.
+
+    - Used for orientation and detecting attitude changes.
+
+    - States: q0, q1, q2, q3, q4, q5
+
+    - Needs calibration in q0
+      
+- [ ] MPU6050 – Accelerometer + Gyroscope
+
+    - Measures acceleration and angular velocity.
+
+    - Essential for detecting liftoff, apogee, free-fall, and descent stabilization.
+
+    - States: q0, q1, q2, q3, q4, q5
+
+    - Needs calibration in q0
+     
+- [x] BME280 – Pressure / Temperature
+    
+    - Measures pressure for altitude computation.
+
+    - Detects liftoff, apogee, and 200m deployment point.
+
+    - States: q0, q1, q2, q3, q4, q5
+      
+- [x] Servo 1 – Airbrake Deployment
+    
+    - Deployed at apogee (55–70°).
+
+    - State: q2
+      
+- [x] Servo 2 – Container / Parachute Deployment
+    
+    - Activated around 200 m altitude (45–90°).
+
+    - State: q4
+     
+- [ ] Buzzer
+    
+    - Acoustic feedback at startup and state transitions.
+
+    - States: q0 → q6 (optional)
+
+- [ ] IRM-H6xxT – IR Receiver
+
+    - Allows remote activation (low priority).
+
+    - State: q0
+
+## ⚙️ Non-Programmable Components
+
+- SW_SPDT_321 – Emergency Switch: Turns SapSAT ON/OFF (not programmable)
+
+- LM2936 3.3V – Voltage Regulator: Provides stable 3.3V supply (not programmable)
+
+- BC107 – BJT Transistor: Used in electrical circuitry (not programmable)
+
+- Neopixel THT LED Strip (optional): Visual feedback (optional)
+
+- Raspberry Pi Pico: Main microcontroller running state machine q0–q6
