@@ -300,7 +300,7 @@ def initialize_SD(spi_bus, sck_pin, mosi_pin, miso_pin, cs_pin):
         # 'w' sta per "write" (scrittura). Se il file esiste, verrà sovrascritto.
         with open(file_path, 'w') as f:
             # Intestazione del CSV
-            f.write("Data,Ora,Temperatura\n")
+            f.write("Data,Ora,Temperatura,Pressione,Acc_x, Acc_y, Acc_z\n")
         
         print("File creato con successo!")
         # ---------------------------------------

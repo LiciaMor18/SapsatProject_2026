@@ -324,9 +324,9 @@ class BMP280:
 # My addiction
 from machine import I2C, Pin
 
-def initialize_BMP():
+def initialize_BMP(i2c_ch, scl, sda):
     # Initialize I2C communication
-    i2c_BMP = I2C(1, sda=Pin(10), scl=Pin(11), freq=100000) # I2C bus 1, SDA pin GP10, SCL pin GP11,
+    i2c_BMP = I2C(i2c_ch, sda = sda, scl = scl, freq=100000) # I2C bus 1, SDA pin GP10, SCL pin GP11,
 
     # Configure BMP280 sensor
     bmp = BMP280(i2c_BMP)
