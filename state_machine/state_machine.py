@@ -1,27 +1,28 @@
 class StateMachine:
-    def __init__(self, specific_state='q0'):
-        self.state = specific_state
-        # In case we want to initialize the machine in state different from q1
+    def __init__(self, bmp, specific_state='initialize', mode=0):
+        self.state = specific_state  # In case we want to initialize the machine in state different from ascent
+        self.bmp = bmp
+        self.mode = mode
 
         self.states = {
-            "q0": self.func1,
-            "q1": self.func2,
-            "q2": self.func3,
-            "q3": self.func4,
-            "q4": self.func5,
-            "q5": self.func6,
-            "q6": self.func7
+            "initialize": self.init_func,
+            "ascent": self.ascent_func,
+            "apogee": self.apogee_func,
+            "descent": self.descent_func,
+            "parachute": self.parachute_func,
+            "landing": self.landing_func,
+            "end": self.end_func
         }
 
     def transition(self):
         allowed = {
-            "q0": "q1",
-            "q1": "q2",
-            "q2": "q3",
-            "q3": "q4",
-            "q4": "q5",
-            "q5": "q6",
-            "q6": "q6"
+            "initialize": "ascent",
+            "ascent": "apogee",
+            "apogee": "descent",
+            "descent": "parachute",
+            "parachute": "landing",
+            "landing": "end",
+            "end": "end"
         }
 
         new_state = allowed.get(self.state)
@@ -34,12 +35,12 @@ class StateMachine:
         # if the state and the variable are the same, returns true that
         # suggest to change the state
         result = { #placeholders
-            "q0": 5,
-            "q1": 7,
-            "q2": 8,
-            "q3": 9,
-            "q4": 10,
-            "q5": 11,
+            "initialize": 5,
+            "ascent": 7,
+            "apogee": 8,
+            "descent": 9,
+            "parachute": 10,
+            "landing": 11,
         }
         if result[self.state] == variable:
             return True
@@ -61,13 +62,26 @@ class StateMachine:
 
 
     def __str__(self):
-        return f"Current state: {self.state}"
+        return f"[{self.state}]:"
 
-    def func1(self): return self.state
-    def func2(self): return self.state
-    def func3(self): return self.state
-    def func4(self): return self.state
-    def func5(self): return self.state
-    def func6(self): return self.state
-    def func7(self): return self.state
+    def init_func(self):
+        return self.state
+    
+    def ascent_func(self):
+        return self.state
+    
+    def apogee_func(self):
+        return self.state
+    
+    def descent_func(self):
+        return self.state
+    
+    def parachute_func(self):
+        return self.state
+    
+    def landing_func(self):
+        return self.state
+    
+    def end_func(self):
+        return self.state
 
