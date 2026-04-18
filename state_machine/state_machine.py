@@ -1,22 +1,18 @@
+from machine import Pin, PWM
+# Importiamo le funzioni necessarie dalla libreria buzzer
+from buzzer import playsong
+from utime import sleep
+
 class StateMachine:
-    def __init__(self, specific_state='q0'):
+    def __init__(self, buzzer_obj, specific_state='start'):
         self.state = specific_state
-        global current_yaw
-        # some values need to be checked everywhere
-        # In case we want to initialize the machine in state different from q1
+        self.buzzer = PWM(Pin(15))
+        
+        # Flag per evitare che la canzone riparta all'infinito in loop nell'ultimo stato
+        self.song_played = False
+        self.is_running =False #utile per il run
 
-        self.states = {
-            "start": self.func1,
-            "ascent": self.func2,
-            "apogee": self.func3,
-            "descent": self.func4,
-            "parachute": self.func5,
-            "landing": self.func6,
-            "end": self.func7
-        }
-
-    def transition(self):
-        allowed = {
+        self.allowed = {
             "start": "ascent",
             "ascent": "apogee",
             "apogee": "descent",
@@ -26,61 +22,68 @@ class StateMachine:
             "end": "end"
         }
 
-        new_state = allowed.get(self.state)
-        self.state = new_state
-
-        return new_state
-
-    def check_start(yaw_angle):
-        if yaw_angle >30:
-            return True
-        else:
-            return False
-
-    def check_global(self,variable):
-        # if the state and the variable are the same, returns true that
-        # suggest to change the state
-        result = { #placeholders
-            "start": 5,
-            "ascent": 7,
-            "apogee": 8,
-            "descent": 9,
-            "parachute": 10,
-            "landing": 11,
-            "end": 12
+        self.logic = {
+            "start": self._logic_start,
+            "ascent": self._logic_ascent,
+            "apogee": self._logic_apogee,
+            "descent": self._logic_descent,
+            "parachute": self._logic_parachute,
+            "landing": self._logic_landing,
+            "end": self._logic_end
         }
-        if result[self.state] == variable:
-            return True
-        return False
 
+    def transition(self):
+        old_state = self.state
+        self.state = self.allowed.get(self.state, self.state)
+        if old_state != self.state:
+            print(f"TRANSITION: {old_state} -> {self.state}")
+
+    # FUNZIONI
+
+    def _logic_start(self, data):
+        if data> 30:
+
+            self.transition()
+
+    def _logic_ascent(self, data):
+        self.transition()
+
+    def _logic_apogee(self, data):
+        print("Aereofreni attivati!")
+        self.transition()
+        
+
+    def _logic_descent(self, data): self.transition()
+    def _logic_parachute(self, data): self.transition()
+    def _logic_landing(self, data): self.transition()
+
+    def _logic_end(self, data):
+        # Eseguiamo la canzone solo una volta quando arriviamo alla fine
+        if not self.song_played:
+            print("Missione completata! Riproduzione segnale acustico...")
+            song = ["E5", "G5", "A5", "P", "E5", "G5", "B5", "A5"]
+            playsong(self.buzzer, song)
+            self.song_played = True
+            self.is_running= True
+
+#def lettura dati
     def run(self):
-        while True:
-            current_state = self.state
-            match current_state:
-                case "start":
-
-
-            funzione = self.states[self.state]  # get the function attach to the state
-            output = funzione()  # execute the function
-            mark=self.check(output) # check if the it needs a change in the status
-            if mark:
-                new_state=self.transition()
-                if new_state == None:
-                    break
-
-                self.state = new_state
-                continue
-
-
-    def __str__(self):
-        # print tha current state, useful for debugging
-        return f"Current state: {self.state}"
-
-    def func1(self): return self.state
-    def func2(self): return self.state
-    def func3(self): return self.state
-    def func4(self): return self.state
-    def func5(self): return self.state
-    def func6(self): return self.state
-    def func7(self): return self.state
+        #dovrà prendere in input il message
+        print("Avvio simulazione...")
+        while not self.is_running:
+            #richiama la funzione di estrazione dati e poi ogni funzione estrae quelli che servono
+            current_data = 35 
+            
+            # Recupera la funzione logica per lo stato attuale
+            execution_func = self.logic.get(self.state)
+            
+            if execution_func:
+                # Eseguiamo la logica passandogli i dati
+                execution_func(current_data)
+            
+           
+            sleep(1)
+            
+        print("Simulazione completata.")
+       
 

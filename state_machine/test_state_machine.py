@@ -1,6 +1,6 @@
 
 from state_machine import StateMachine
-from gyroscope import advanced_calibrate, update_gyro, get_current_yaw
+#from gyroscope import advanced_calibrate, update_gyro, get_current_yaw
 import time
 # Testing
 def path_test(sm):
@@ -21,15 +21,16 @@ def path_test(sm):
 
 if __name__ == '__main__':
     
-    sm = StateMachine('q0')
+    sm = StateMachine('start')
     print(sm)
-    advanced_calibrate(1000)
-    while True:
-        update_gyro()
-        if get_current_yaw() > 30:
-            print("Soglia superata!")
-            sm.transition()
-            print(sm)
-            break
+    sm.run()
 
-        time.sleep_ms(20)
+        #update_gyro()
+        #if get_yaw() > 90:
+            #print("Soglia superata!")
+            #sm.transition()
+            #print(sm)
+
+
+
+
