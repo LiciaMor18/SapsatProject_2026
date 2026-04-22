@@ -23,17 +23,17 @@ def save_local_log(telemetry):
     try:
         with open(LOG_FILE, "a") as f:
             f.write(json.dumps(telemetry) + "\n")
-          
     except Exception as e:
         print(f"Errore salvataggio log: {e}")
 
 def run_s():
-  
+    
     print("=== Avvio test Telemetria LoRa per invio ===")
-        
+    time.sleep(2)
+    
     while True:
         
-        # Valori di PROVA
+        # Qui metteremo valori raccolti all'inizio, questi sono solo di PROVA 
         current_alt = 1042.5
         current_temp = 18.5
         current_batt = 3.74
@@ -41,7 +41,8 @@ def run_s():
         current_ang = [0.05, -0.1, 0]
         current_acc = [0.0, 0.0, 9.81]
         current_mag = [25, -12, 45]
-      
+        
+        # Passiamo i valori letti alla funzione
         telemetry_data = read_sensors(
             current_alt, current_temp, current_batt, current_rate, 
             current_ang, current_acc, current_mag
@@ -64,6 +65,7 @@ def run_s():
         
         save_local_log(telemetry_data)
         
+        # Attesa prima del prossimo ciclo
         time.sleep(1)
     
     
