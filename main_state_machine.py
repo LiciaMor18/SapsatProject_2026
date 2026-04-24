@@ -1,6 +1,4 @@
 from state_machine import StateMachine
-#from gyroscope import advanced_calibrate, update_gyro, get_current_yaw
-import time
 
 if __name__ == '__main__':
     

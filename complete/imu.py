@@ -41,6 +41,7 @@ from utime import sleep_ms
 from machine import I2C
 from vector3d import Vector3d
 import time
+import math
 
 
 class MPUException(OSError):
@@ -400,11 +401,12 @@ class MPU6050(object):
         self._gyro._ivector[2] = bytes_toint(self.buf6[4], self.buf6[5])
 
 # My addiction
-def initialize_MPU(i2c_ch, scl, sda, freq):
+def initialize_MPU(i2c_ch, scl, sda, freq, device_addr = 1):
     i2c = I2C(i2c_ch, scl = scl, sda = sda, freq = freq)
-    mpu = MPU6050(i2c)
+    mpu = MPU6050(i2c, device_addr=device_addr)
     
     advanced_calibrate(i2c, mpu, 1000)
+    return mpu
     
 MPU_ADDR = 0x68
 PWR_MGMT_1 = 0x6B
@@ -444,7 +446,7 @@ def advanced_calibrate(i2c, mpu, samples=1000):
     bx, by, bz = sum_gx / samples, sum_gy / samples, sum_gz / samples
     print("Calibrazione completata con successo!\n")
 
-def update_gyro():
+def update_gyro(mpu):
     """Aggiorna la logica degli angoli e le variabili globali senza ritornare nulla"""
     global last_time, filtered_x, filtered_y, pure_gyro_x, pure_gyro_y, pure_gyro_z
     global last_ax, last_ay, last_az, last_gx, last_gy, last_gz
@@ -475,7 +477,7 @@ def update_gyro():
     filtered_x = alpha * (filtered_x + last_gx * dt) + (1 - alpha) * accel_angle_x
     filtered_y = alpha * (filtered_y + last_gy * dt) + (1 - alpha) * accel_angle_y
 
-    print(f"Update: P:{filtered_x:.1f} R:{filtered_y:.1f} Y:{pure_gyro_z:.1f}")
+    # print(f"Update: R:{filtered_x:.1f} P:{filtered_y:.1f} Y:{pure_gyro_z:.1f}")
     
     return filtered_x, filtered_y, pure_gyro_z
 
