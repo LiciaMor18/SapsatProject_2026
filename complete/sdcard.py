@@ -290,23 +290,35 @@ def initialize_SD(spi_bus, sck_pin, mosi_pin, miso_pin, cs_pin):
         
         # Montaggio della MicroSD
         os.mount(sd, SD_MOUNT_PATH)
-        print("Scheda SD montata correttamente.")
+        print("SD correctly mounted.")
 
         # --- NUOVA PARTE: CREAZIONE FILE CSV ---
         # Definiamo il percorso completo del file
-        file_path = SD_MOUNT_PATH + '/text.csv'
+        file_path = SD_MOUNT_PATH + '/data.csv'
         
-        print("Creazione del file text.csv...")
+        print("Creating file data.csv...")
         # 'w' sta per "write" (scrittura). Se il file esiste, verrà sovrascritto.
         with open(file_path, 'w') as f:
             # Intestazione del CSV
-            f.write("Data,Ora,Temperatura,Pressione,Acc_x, Acc_y, Acc_z\n")
-        
-        print("File creato con successo!")
+            f.write(
+                f"{'Date':<15}"
+                f"{'Time':<12}"
+                f"{'Pressure':<15}"
+                f"{'Height':<15}"
+                f"{'Temperature':<15}"
+                f"{'Acc_x':<15}"
+                f"{'Acc_y':<15}"
+                f"{'Acc_z':<15}"
+                f"{'Mag_x':<10}"
+                f"{'Mag_y':<10}"
+                f"{'Mag_z':<10}\n"
+            )
+                    
+        print("File data.txt correctly created!")
         # ---------------------------------------
 
         # Elenca i file sulla MicroSD per confermare la creazione
-        print("File presenti sulla SD:", os.listdir(SD_MOUNT_PATH))
+        print("Files on SD:", os.listdir(SD_MOUNT_PATH))
 
     except Exception as e:
-        print('Si è verificato un errore:', e)
+        print('SD Error: ', e)

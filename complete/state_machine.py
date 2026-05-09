@@ -6,11 +6,14 @@ import math
 import servo
 import bmp280
 import urtc
+import imu
 
 from message import *
 
+SD_MOUNT_PATH = '/sd'
+
 class StateMachine:
-    def __init__(self, buzzer_obj, bmp, rtc, mpu, sd, qmc, aerobrake, parachute, p_0, specific_state='start'):
+    def __init__(self, buzzer, bmp, rtc, mpu, sd, qmc, aerobrake, parachute, p_0, T_0, h_0, specific_state='start'):
         self.state = specific_state
         self.buzzer = buzzer
         self.bmp = bmp
@@ -18,9 +21,11 @@ class StateMachine:
         self.mpu = mpu
         self.sd = sd
         self.qmc = qmc
-        self.aerobake = aerobake
+        self.aerobrake = aerobrake
         self.parachute = parachute
         self.p_0 = p_0
+        self.T_0 = T_0
+        self.h_0 = h_0
         self.height = 0
         
         
@@ -57,16 +62,16 @@ class StateMachine:
     # FUNZIONI
 
     def _logic_start(self,message: Message):
-        tripla = message.get_accelerations() # Esempio di valori
-        print(f'id:{message._id_counter} tripla {tripla}')
-        ax, ay, az = tripla[0],tripla[1],tripla[2]
+        acc = message.get_accelerations()
+        print(f'id:{message._id_counter} acc: {acc}')
+        ax, ay, az = acc[0],acc[1],acc[2]
         accelerazione_totale = math.sqrt(ax ** 2 + ay ** 2 + az ** 2)
         
         if (message._id_counter == 6):
            accelerazione_totale = 60
             
         if accelerazione_totale > 20 :
-            print("accellerazione maggiore 20m/s^2")
+            print("accelerazione maggiore 20m/s^2")
             self.transition()
 
     def _logic_ascent(self,message: Message):
@@ -95,9 +100,10 @@ class StateMachine:
             self.transition()
 
     def _logic_descent(self, message: Message):
+        acc = message.get_accelerations()
         az = message.get_accelerations()[2]
         
-        print(f'id:{message._id_counter} az:{az}')
+        print(f'id:{message._id_counter} acc:{acc}')
         
         if (message._id_counter == 17):
            az = -10
@@ -146,19 +152,23 @@ class StateMachine:
             #modo stupido per dire che siamo arrivati
             print("Missione completata! Riproduzione segnale acustico...")
             song = ["E5", "G5", "A5", "P", "E5", "G5", "B5", "A5"]
-            # playsong(self.buzzer, song)
+            playsong(self.buzzer, song)
             self.song_played = True
             self.is_running = True
     
     def get_data(self) -> Message:
-        T_t = bmp.temperature
-        p_t = bmp.pressure
-        h_t = bmp280.altitude(T_0, p_t, p_0)
-        curr_time = rtc.datetime()
+        T_t = self.bmp.temperature
+        p_t = self.bmp.pressure
+        h_t = bmp280.altitude(self.T_0, p_t, self.p_0)
+        rtc_info = self.rtc.datetime()
+        date = '' + str(rtc_info[1]) + '/' + str(rtc_info[2]) + '/' + str(rtc_info[0])
+        time = '' + str(rtc_info[4]) + ':' + str(rtc_info[5]) + ':' + str(rtc_info[6])
+        
         angles = [0, 0, 0]
-        acc_x, acc_y, acc_z = imu.update_gyro(mpu)
-        acc = [acc_x, acc_y, acc_z]
-        mag = [0, 0, 0] # Da modificare con dati raccolti dal sensore qmc.read()
+        acc = imu.update_gyro(self.mpu)
+        
+        mag_xyz = self.qmc.read() # Da modificare con dati raccolti dal sensore qmc.read()
+        
         
         if (p_t != self.p_0):
             press = [self.p_0, p_t]
@@ -166,13 +176,33 @@ class StateMachine:
         else:
             press = [0, self.p_0]
             
-        if (h_t != 0):
-            height = [0, h_t]
-            self.height = h_t
+        if (h_t != self.h_0):
+            height = [self.h_0, h_t]
+            self.h_0 = h_t
         else:
-            press = [0, self.p_0]
+            height = [0, self.h_0]
             
-        msg = Message(press, height, T_t, angles, acc, mag, curr_time)
+        msg = Message(press, height, T_t, angles, acc, mag_xyz, time) # DA CAMBIARE HOUR
+        
+        file_path = SD_MOUNT_PATH + '/data.csv'
+        with open(file_path, 'a') as f:
+            # f.write(f"{date}, {hour}:{minute}:{second}, {press[1]}, {height[1]}, {T_t}, {acc[0]}, {acc[1]}, {acc[2]}, {mag_xyz[0]}, {mag_xyz[1]}, {mag_xyz[2]}\n")
+            f.write(
+                f"{date:<15}"
+                f"{time:<12}"
+                f"{press[1]:<15}"
+                f"{height[1]:<15.4f}"
+                f"{T_t:<15}"
+                f"{acc[0]:<15.4f}"
+                f"{acc[1]:<15.4f}"
+                f"{acc[2]:<15.4f}"
+                f"{mag_xyz[0]:<10}"
+                f"{mag_xyz[1]:<10}"
+                f"{mag_xyz[2]:<10}\n"
+            )
+        f.close()
+        
+        # "Date, Time, Pressure, Altitude, Temperatura, Acc_x, Acc_y, Acc_z, Mag_x, Mag_y, Mag_z\n"
         
         return msg
             
@@ -182,41 +212,44 @@ class StateMachine:
         Genera un oggetto MessaggioDati con valori di test verosimili.
         """
         # 1. Dati Ambientali
-        pressione = 1013.25  # hPa (Livello del mare)
+        # pressione = 1013.25  # hPa (Livello del mare)
+        pressione = self.bmp.pressure
         altezza = 450.5  # metri
         temperatura = 22.4  # °C
 
-        #
         # Pitch, Roll, Yaw
         angoli_xyz = (1.5, -0.2, 120.0)
 
         # Accelerazione (m/s²)
-        #
-        accel_xyz = (0.05, 0.02, 9.81)
+        accel_xyz = imu.update_gyro(self.mpu)
 
         # Magnetometro
-        mag_xyz = (22.5, -15.0, -35.2)
+        mag_xyz = self.qmc.read()
 
         # 5. Timestamp
-        data_corrente = "oggi"
         ora_corrente = "ora"
-
+        
+        file_path = SD_MOUNT_PATH + '/data.csv'
+        with open(file_path, 'a') as f:
+            f.write(f"{pressione}\n")
+        f.close()
+    
         # Creazione e restituzione dell'oggetto
         return Message(
             [pressione, pressione],
-            [altezza,altezza],
+            [altezza, altezza],
             temperatura=temperatura,
             angoli_xyz=angoli_xyz,
             accel_xyz=accel_xyz,
             mag_xyz=mag_xyz,
-            data=data_corrente,
             ora=ora_corrente
         )
     def run(self):
         #dovrà prendere in input il message
         print("Avvio simulazione...")
         while not self.is_running:
-            message = self.acquisisci_sensori_template() #funzione che ottiene i dati
+            # message = self.acquisisci_sensori_template() #funzione che ottiene i dati
+            message = self.get_data() #funzione che ottiene i dati
             # Recupera la funzione logica per lo stato attuale
             execution_func = self.logic.get(self.state)
             

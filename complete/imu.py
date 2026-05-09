@@ -432,7 +432,7 @@ def advanced_calibrate(i2c, mpu, samples=1000):
     i2c.writeto_mem(MPU_ADDR, PWR_MGMT_1, b'\x01')
     i2c.writeto_mem(MPU_ADDR, CONFIG, b'\x03')
     
-    print(f"Calibrazione... Tenere fermo il sensore ({samples} campioni)")
+    print(f"Calibrating MPU with {samples} samples")
     sum_gx = sum_gy = sum_gz = 0
     for i in range(samples):
         sum_gx += mpu.gyro.x
@@ -440,11 +440,11 @@ def advanced_calibrate(i2c, mpu, samples=1000):
         sum_gz += mpu.gyro.z
         if i % (samples // 10) == 0:
             percentuale = (i / samples) * 100
-            print(f"Calibrazione: {int(percentuale)}%")
-        time.sleep_ms(2) 
+            # print(f"Calibrazione: {int(percentuale)}%")
+        time.sleep_ms(1) 
     
     bx, by, bz = sum_gx / samples, sum_gy / samples, sum_gz / samples
-    print("Calibrazione completata con successo!\n")
+    print("MPU correctly initialized!\n")
 
 def update_gyro(mpu):
     """Aggiorna la logica degli angoli e le variabili globali senza ritornare nulla"""
@@ -479,7 +479,7 @@ def update_gyro(mpu):
 
     # print(f"Update: R:{filtered_x:.1f} P:{filtered_y:.1f} Y:{pure_gyro_z:.1f}")
     
-    return filtered_x, filtered_y, pure_gyro_z
+    return [filtered_x, filtered_y, pure_gyro_z]
 
 # Getter Functions
 
