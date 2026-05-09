@@ -4,9 +4,10 @@ import time
 import urtc
 import bmp280
 import sdcard
+import qmc5883p
 import os
 import imu
-from machine import I2C, Pin, SPI
+from machine import I2C, Pin, SPI, PWM
 
 # CONSTANTS
 BMP_i2c = 0
@@ -28,6 +29,11 @@ MPU_sda = Pin(4)
 MPU_scl = Pin(5)
 MPU_freq = 400000
 
+QMC_i2c = 0
+QMC_sda = Pin(4)
+QMC_scl = Pin(5)
+QMC_declination = (3, 14)
+
 buzzer = PWM(Pin(15)) # Azzecca il pin corretto
 
 # Sensors initialization
@@ -35,6 +41,7 @@ buzzer = PWM(Pin(15)) # Azzecca il pin corretto
 # rtc = urtc.initialize_RTC(RTC_i2c, RTC_scl, RTC_sda)
 # sd = sdcard.initialize_SD(SD_spi, SD_sck, SD_mosi, SD_miso, SD_cs)
 # mpu = imu.initialize_MPU(MPU_i2c, MPU_scl, MPU_sda, MPU_freq)
+qmc = qmc5883p.initialize_QMC(QMC_i2c, QMC_scl, QMC_sda, QMC_declination)
 
 
 # Servomotors
@@ -45,7 +52,7 @@ parachute_servo.freq(50)  # Set PWM frequency to 50Hz, common for servo motors
 
 if __name__ == '__main__':
     
-    sm = StateMachine(buzzer, bmp, rtc, mpu, sd, aerobrake_servo, parachute_servo, p_0, 'start')
+    sm = StateMachine(buzzer, bmp, rtc, mpu, sd, qmc, aerobrake_servo, parachute_servo, p_0, 'start')
     print(sm)
     sm.run()
 

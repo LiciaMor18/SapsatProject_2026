@@ -1,12 +1,50 @@
 from machine import Pin, PWM
 from utime import sleep
 
-def playtone(frequency):
-    buzzer.duty_u16(1000)
-    buzzer.freq(frequency)
+#variabile globale che tiene conto del volume
+_volume_percent = 10
+
     
-def bequiet():
-    buzzer.duty_u16(0)
+def bequiet(buzzer_obj):
+    buzzer_obj.duty_u16(0)
+
+def set_volume(percentage):
+    global _volume_percent
+    if percentage > 100: percentage = 100
+    if percentage < 0: percentage = 0
+    #aggiornamento volume
+    _volume_percent = percentage
+
+def playtone(buzzer_obj, frequency):
+    if _volume_percent <= 0:
+        bequiet(buzzer_obj)
+        return
+    
+    # Calcolo del duty cycle: il 50% (32768) è il volume massimo.
+    # Scaliamo questo valore in base alla percentuale scelta.
+    duty = int((_volume_percent / 100) * 32768)
+    
+    buzzer_obj.freq(frequency)
+    buzzer_obj.duty_u16(duty)
+    
+def beep_low_volume(buzzer_obj,durata_secondi, intensita):
+    """
+    intensita: valore da 1 a 10 (1 molto piano, 10 volume massimo del buzzer)
+    """
+    # Mappiamo l'intensità su valori di duty cycle molto bassi.
+    # Un buzzer attivo di solito inizia a suonare intorno a 100-200.
+    # Sopra i 1000 per un buzzer attivo è già quasi il massimo.
+    valori_duty = [0, 50, 100, 150, 250, 400, 600, 800, 1200, 2000, 5000]
+    
+    duty_scelto = valori_duty[intensita]
+    
+    # Impostiamo una frequenza fissa (per i buzzer attivi la frequenza PWM 
+    # deve essere alta per non interferire troppo con l'oscillatore interno)
+    buzzer_obj.freq(2000) 
+    
+    buzzer_obj.duty_u16(duty_scelto)
+    sleep(durata_secondi)
+    buzzer_obj.duty_u16(0)
     
 tones = {
     "B0": 31,
@@ -101,15 +139,15 @@ tones = {
 }
 
 
-
-def playsong(mysong):
-    for i in range(len(mysong)):
-        if (mysong[i] == "P"):
-            bequiet()
-        else:
-            playtone(tones[mysong[i]])
+def playsong(buzzer_obj, mysong):
+    for note in mysong:
+        if note == "P":
+            bequiet(buzzer_obj)
+        elif note in tones:
+            playtone(buzzer_obj, tones[note])
         sleep(0.3)
-    bequiet()
+        bequiet(buzzer_obj)
+        sleep(0.01) 
 
 
 

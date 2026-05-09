@@ -10,13 +10,14 @@ import urtc
 from message import *
 
 class StateMachine:
-    def __init__(self, buzzer_obj, bmp, rtc, mpu, sd, aerobrake, parachute, p_0, specific_state='start'):
+    def __init__(self, buzzer_obj, bmp, rtc, mpu, sd, qmc, aerobrake, parachute, p_0, specific_state='start'):
         self.state = specific_state
         self.buzzer = buzzer
         self.bmp = bmp
         self.rtc = rtc
         self.mpu = mpu
         self.sd = sd
+        self.qmc = qmc
         self.aerobake = aerobake
         self.parachute = parachute
         self.p_0 = p_0
@@ -157,7 +158,7 @@ class StateMachine:
         angles = [0, 0, 0]
         acc_x, acc_y, acc_z = imu.update_gyro(mpu)
         acc = [acc_x, acc_y, acc_z]
-        mag = [0, 0, 0]
+        mag = [0, 0, 0] # Da modificare con dati raccolti dal sensore qmc.read()
         
         if (p_t != self.p_0):
             press = [self.p_0, p_t]
@@ -176,7 +177,7 @@ class StateMachine:
         return msg
             
 
-        def acquisisci_sensori_template(self) -> Message:
+    def acquisisci_sensori_template(self) -> Message:
         """
         Genera un oggetto MessaggioDati con valori di test verosimili.
         """
